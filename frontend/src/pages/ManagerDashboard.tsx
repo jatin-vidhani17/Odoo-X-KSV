@@ -73,8 +73,7 @@ const ManagerDashboard = () => {
                 <DollarSign size={24} />
               </div>
               <div>
-                <div className="kpi-value" style={{ fontSize: '1.75rem', fontWeight: 'bold' }}>
-                  ${totalPOValue.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                <div className="kpi-value" style={{ fontSize: '1.75rem', fontWeight: 'bold' }}>₹{totalPOValue.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                 </div>
                 <div className="kpi-label" style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Total PO Value</div>
               </div>

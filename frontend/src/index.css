@@ -362,3 +362,27 @@ tr:hover td {
   color: var(--accent);
   margin-bottom: 2rem;
 }
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  
+  .printable-area, .printable-area * {
+    visibility: visible;
+  }
+  
+  .printable-area {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Hide print buttons and other controls inside the printable area */
+  .no-print, .no-print * {
+    display: none !important;
+  }
+}

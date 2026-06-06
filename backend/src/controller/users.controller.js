@@ -110,7 +110,7 @@ const createUser = async (req, res) => {
 
         try {
             const [result] = await connection.query(
-                "INSERT INTO users (username, password, name, email, phone, role, profile_photo) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                "INSERT INTO users (username, password, name, email, phone, role, profile_photo, status) VALUES (?, ?, ?, ?, ?, ?, ?, 'Active')",
                 [username, hashedPassword, name, email, phone || null, role, profile_photo || null]
             );
 

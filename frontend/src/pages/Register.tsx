@@ -14,8 +14,23 @@ const Register = () => {
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-
   const [profilePhoto, setProfilePhoto] = useState('');
+
+  React.useEffect(() => {
+    const token = localStorage.getItem('token');
+    const userStr = localStorage.getItem('user');
+    if (token && userStr) {
+      try {
+        const user = JSON.parse(userStr);
+        if (user.role === 'Admin') navigate('/admin');
+        else if (user.role === 'Vendor') navigate('/vendor');
+        else if (user.role === 'Manager') navigate('/manager');
+        else navigate('/procurement');
+      } catch (err) {
+        // Invalid json, do nothing
+      }
+    }
+  }, [navigate]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -90,6 +105,7 @@ const Register = () => {
         throw new Error(data.message || 'Registration failed');
       }
 
+      alert('Registration successful! Your account is pending admin approval. You will be able to log in once an admin activates your account.');
       navigate('/login');
     } catch (err: any) {
       setError(err.message);

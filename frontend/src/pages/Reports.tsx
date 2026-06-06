@@ -112,21 +112,21 @@ const Reports = () => {
               <tr>
                 <td className="font-bold">TechCorp Ltd</td>
                 <td>IT Equipment</td>
-                <td>$ 45,200</td>
+                <td>₹ 45,200</td>
                 <td>12</td>
                 <td>4.8 / 5.0</td>
               </tr>
               <tr>
                 <td className="font-bold">Global Furniture</td>
                 <td>Furniture</td>
-                <td>$ 28,500</td>
+                <td>₹ 28,500</td>
                 <td>6</td>
                 <td>4.5 / 5.0</td>
               </tr>
               <tr>
                 <td className="font-bold">Office Supplies Co</td>
                 <td>Stationery</td>
-                <td>$ 5,400</td>
+                <td>₹ 5,400</td>
                 <td>18</td>
                 <td>4.2 / 5.0</td>
               </tr>

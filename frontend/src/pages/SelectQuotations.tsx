@@ -121,8 +121,7 @@ const SelectQuotations = () => {
                 {quotations.map((quote) => (
                   <tr key={quote.id}>
                     <td className="font-bold">{quote.company_name || quote.vendor_name}</td>
-                    <td style={{ color: 'var(--accent)', fontWeight: 'bold' }}>
-                      ${calculateTotal(quote).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    <td style={{ color: 'var(--accent)', fontWeight: 'bold' }}>₹{calculateTotal(quote).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </td>
                     <td>{getDeliveryDays(quote)}</td>
                     <td>{quote.vendor_notes || 'None'}</td>

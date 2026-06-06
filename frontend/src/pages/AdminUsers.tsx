@@ -62,7 +62,11 @@ const AdminUsers = () => {
   }, [searchQuery, selectedRole, users]);
 
   const handleToggleStatus = async (user: any) => {
-    const newStatus = user.status === 'Active' ? 'Suspended' : 'Active';
+    let newStatus = 'Active';
+    if (user.status === 'Active') newStatus = 'Suspended';
+    if (user.status === 'Suspended') newStatus = 'Active';
+    if (user.status === 'Pending') newStatus = 'Active';
+
     try {
       const res = await apiFetch(`/users/${user.id}`, {
         method: 'PUT',
@@ -274,13 +278,19 @@ const AdminUsers = () => {
                       </span>
                     </td>
                     <td>
-                      <span className={`badge ${user.status === 'Active' ? 'badge-success' : 'badge-danger'}`}>
-                        {user.status}
+                      <span className={`badge ${
+                        user.status === 'Active' ? 'badge-success' : 
+                        user.status === 'Suspended' ? 'badge-danger' : 
+                        'badge-warning'
+                      }`}>
+                        {user.status === 'Pending' ? 'Pending Approval' : user.status}
                       </span>
                     </td>
                     <td style={{ textAlign: 'right' }}>
                       <button 
-                        className={`btn ${user.status === 'Active' ? 'btn-outline-danger' : 'btn-outline-success'}`}
+                        className={`btn ${
+                          user.status === 'Active' ? 'btn-outline' : 'btn-primary'
+                        }`}
                         style={{ padding: '0.25rem 0.75rem', fontSize: '0.875rem', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}
                         onClick={() => handleToggleStatus(user)}
                       >
@@ -288,9 +298,13 @@ const AdminUsers = () => {
                           <>
                             <UserX size={14} /> Suspend
                           </>
-                        ) : (
+                        ) : user.status === 'Suspended' ? (
                           <>
                             <UserCheck size={14} /> Activate
+                          </>
+                        ) : (
+                          <>
+                            <UserCheck size={14} /> Approve Registration
                           </>
                         )}
                       </button>

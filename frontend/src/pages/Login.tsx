@@ -8,6 +8,22 @@ const Login = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  React.useEffect(() => {
+    const token = localStorage.getItem('token');
+    const userStr = localStorage.getItem('user');
+    if (token && userStr) {
+      try {
+        const user = JSON.parse(userStr);
+        if (user.role === 'Admin') navigate('/admin');
+        else if (user.role === 'Vendor') navigate('/vendor');
+        else if (user.role === 'Manager') navigate('/manager');
+        else navigate('/procurement');
+      } catch (err) {
+        // Invalid json, do nothing
+      }
+    }
+  }, [navigate]);
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');

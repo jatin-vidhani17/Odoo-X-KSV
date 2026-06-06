@@ -162,7 +162,7 @@ const VendorDashboard = () => {
                         <tr key={po.id}>
                           <td className="font-bold">{po.po_number}</td>
                           <td>{po.rfq_title}</td>
-                          <td style={{ textAlign: 'right' }}>${parseFloat(po.total_amount).toFixed(2)}</td>
+                          <td style={{ textAlign: 'right' }}>₹{parseFloat(po.total_amount).toFixed(2)}</td>
                           <td>
                             <span className="badge badge-success">{po.status}</span>
                           </td>

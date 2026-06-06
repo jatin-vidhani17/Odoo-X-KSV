@@ -46,7 +46,7 @@ const createPurchaseOrder = async (req, res) => {
 const getAllPurchaseOrders = async (req, res) => {
     try {
         const query = `
-            SELECT po.*, q.rfq_id, r.title AS rfq_title, u.name AS vendor_name, vd.company_name
+            SELECT po.*, q.rfq_id, q.vendor_id, r.title AS rfq_title, u.name AS vendor_name, vd.company_name
             FROM purchase_orders po
             INNER JOIN quotations q ON po.quotation_id = q.id
             INNER JOIN rfqs r ON q.rfq_id = r.id
@@ -170,63 +170,152 @@ const getPOPDF = async (req, res) => {
         );
 
         // Build premium simulated HTML print invoice
+        // Build premium simulated HTML print invoice based on GimBooks format
         const itemsHtml = items.map((item, index) => `
             <tr>
-                <td style="padding: 10px; border-bottom: 1px solid #ddd;">${index + 1}</td>
-                <td style="padding: 10px; border-bottom: 1px solid #ddd;">${item.item_name}</td>
-                <td style="padding: 10px; border-bottom: 1px solid #ddd; text-align: right;">${item.quantity_bidded} ${item.unit}</td>
-                <td style="padding: 10px; border-bottom: 1px solid #ddd; text-align: right;">$${parseFloat(item.unit_price).toFixed(2)}</td>
-                <td style="padding: 10px; border-bottom: 1px solid #ddd; text-align: right;">${item.gst_percentage}%</td>
-                <td style="padding: 10px; border-bottom: 1px solid #ddd; text-align: right;">$${parseFloat(item.net_price_with_gst).toFixed(2)}</td>
+                <td style="padding: 10px; border-right: 1px solid #00b050; border-bottom: 1px solid #eee;">[${item.rfq_item_id || item.id}]</td>
+                <td style="padding: 10px; border-right: 1px solid #00b050; border-bottom: 1px solid #eee;">${item.item_name}</td>
+                <td style="padding: 10px; text-align: center; border-right: 1px solid #00b050; border-bottom: 1px solid #eee;">${item.quantity_bidded}</td>
+                <td style="padding: 10px; text-align: right; border-right: 1px solid #00b050; border-bottom: 1px solid #eee;">${parseFloat(item.unit_price).toFixed(2)}</td>
+                <td style="padding: 10px; text-align: right; border-bottom: 1px solid #eee;">${parseFloat(item.net_price_with_gst).toFixed(2)}</td>
             </tr>
         `).join("");
 
+        // Calculate Subtotal (total amount without tax) for the bottom table
+        const subtotal = items.reduce((acc, item) => acc + (parseFloat(item.unit_price) * parseFloat(item.quantity_bidded)), 0).toFixed(2);
+        const tax = items.reduce((acc, item) => acc + (parseFloat(item.net_price_with_gst) - (parseFloat(item.unit_price) * parseFloat(item.quantity_bidded))), 0).toFixed(2);
+
         const pdfHtml = `
-            <div style="font-family: Arial, sans-serif; padding: 40px; color: #333; background-color: white; max-width: 800px; margin: auto; border: 1px solid #eee;">
-                <div style="display: flex; justify-content: space-between; border-bottom: 2px solid #333; padding-bottom: 20px;">
+            <div style="font-family: Arial, sans-serif; padding: 40px; color: #333; background-color: white; max-width: 800px; margin: auto; border: 2px solid #00b050;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 40px;">
                     <div>
-                        <h1 style="margin: 0; color: #1e3a8a;">VendorBridge ERP</h1>
-                        <p style="margin: 5px 0 0 0; color: #666;">Official Purchase Order</p>
+                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                            <div style="width: 50px; height: 50px; background-color: #ffd966; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                                <div style="width: 24px; height: 30px; background-color: white; border: 1px solid #ccc; position: relative;">
+                                    <div style="position: absolute; top: 5px; left: 4px; right: 4px; height: 2px; background-color: #4285f4;"></div>
+                                    <div style="position: absolute; top: 10px; left: 4px; right: 4px; height: 2px; background-color: #ccc;"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <h2 style="margin: 0; color: #db4437; font-size: 24px; display: inline;">Vendor</h2><h2 style="margin: 0; color: #00b050; font-size: 24px; display: inline;">Bridge</h2>
+                                <h3 style="margin: 0; color: #00b050; font-weight: normal;">VendorBridge</h3>
+                            </div>
+                        </div>
+                        <div style="font-size: 12px; line-height: 1.4;">
+                            [123 Enterprise Way]<br>
+                            [Tech District, NY 10001]<br>
+                            Phone: (800) 555-0199<br>
+                            Fax: (800) 555-0198<br>
+                            Website: www.vendorbridge.com
+                        </div>
                     </div>
                     <div style="text-align: right;">
-                        <h2 style="margin: 0; color: #666;">${po.po_number}</h2>
-                        <p style="margin: 5px 0 0 0;">Date: ${new Date(po.created_at).toLocaleDateString()}</p>
-                        <span style="display: inline-block; padding: 5px 10px; background: #e0f2fe; color: #0369a1; border-radius: 4px; font-weight: bold; margin-top: 5px;">${po.status}</span>
+                        <h1 style="margin: 0; color: #00b050; font-size: 36px; text-transform: uppercase;">Purchase Order</h1>
+                        <table style="margin-top: 20px; float: right; font-size: 14px;">
+                            <tr>
+                                <td style="text-align: right; padding-right: 15px;">DATE</td>
+                                <td>${new Date(po.created_at).toLocaleDateString('en-GB').replace(/\//g, '-')}</td>
+                            </tr>
+                            <tr>
+                                <td style="text-align: right; padding-right: 15px;">PO #</td>
+                                <td>[${po.po_number}]</td>
+                            </tr>
+                        </table>
                     </div>
                 </div>
-                <div style="margin: 30px 0; display: flex; justify-content: space-between;">
-                    <div>
-                        <h4 style="margin: 0 0 10px 0; color: #1e3a8a;">ISSUED TO:</h4>
-                        <p style="margin: 0;"><strong>${po.company_name || po.vendor_name}</strong></p>
-                        <p style="margin: 5px 0;">GSTIN: ${po.gst_number || "N/A"}</p>
-                        <p style="margin: 5px 0;">Vendor ID: ${po.vendor_id}</p>
+
+                <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+                    <div style="width: 48%;">
+                        <div style="background-color: #00b050; color: white; padding: 5px 10px; font-weight: bold; font-size: 14px;">VENDOR</div>
+                        <div style="padding: 10px 0; font-size: 12px; line-height: 1.4;">
+                            [${po.company_name || po.vendor_name}]<br>
+                            [${po.vendor_email}]<br>
+                            [${po.vendor_address || 'Address Line 1'}]<br>
+                            [City, ST ZIP]<br>
+                            Phone: [${po.vendor_phone || '(000) 000-0000'}]<br>
+                            Fax: [(000) 000-0000]
+                        </div>
                     </div>
-                    <div style="text-align: right;">
-                        <h4 style="margin: 0 0 10px 0; color: #1e3a8a;">RFQ REFERENCE:</h4>
-                        <p style="margin: 0;">RFQ ID: ${po.rfq_id}</p>
-                        <p style="margin: 5px 0;">Title: ${po.rfq_title}</p>
+                    <div style="width: 48%;">
+                        <div style="background-color: #00b050; color: white; padding: 5px 10px; font-weight: bold; font-size: 14px;">SHIP TO</div>
+                        <div style="padding: 10px 0; font-size: 12px; line-height: 1.4;">
+                            [Receiving Department]<br>
+                            [VendorBridge Inc]<br>
+                            [123 Enterprise Way]<br>
+                            [Tech District, NY 10001]<br>
+                            [(800) 555-0199]
+                        </div>
                     </div>
                 </div>
-                <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+
+                <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; text-align: center; font-size: 12px; border: 1px solid #00b050;">
+                    <tr style="background-color: #00b050; color: white;">
+                        <th style="padding: 5px; border-right: 1px solid white;">REQUISITIONER</th>
+                        <th style="padding: 5px; border-right: 1px solid white;">SHIP VIA</th>
+                        <th style="padding: 5px; border-right: 1px solid white;">F.O.B.</th>
+                        <th style="padding: 5px;">SHIPPING TERMS</th>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px; border-right: 1px solid #00b050;">Procurement Team</td>
+                        <td style="padding: 10px; border-right: 1px solid #00b050;">Standard</td>
+                        <td style="padding: 10px; border-right: 1px solid #00b050;">Destination</td>
+                        <td style="padding: 10px;">Net 30</td>
+                    </tr>
+                </table>
+
+                <table style="width: 100%; border-collapse: collapse; border: 2px solid #00b050; font-size: 12px; min-height: 300px;">
                     <thead>
-                        <tr style="background: #f3f4f6;">
-                            <th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">#</th>
-                            <th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">Item Description</th>
-                            <th style="padding: 10px; text-align: right; border-bottom: 2px solid #ddd;">Qty</th>
-                            <th style="padding: 10px; text-align: right; border-bottom: 2px solid #ddd;">Unit Price</th>
-                            <th style="padding: 10px; text-align: right; border-bottom: 2px solid #ddd;">GST</th>
-                            <th style="padding: 10px; text-align: right; border-bottom: 2px solid #ddd;">Net Price</th>
+                        <tr style="background-color: #00b050; color: white;">
+                            <th style="padding: 8px; text-align: left; border-right: 1px solid white;">ITEM #</th>
+                            <th style="padding: 8px; text-align: left; border-right: 1px solid white;">DESCRIPTION</th>
+                            <th style="padding: 8px; text-align: center; border-right: 1px solid white;">QTY</th>
+                            <th style="padding: 8px; text-align: right; border-right: 1px solid white;">UNIT PRICE</th>
+                            <th style="padding: 8px; text-align: right;">TOTAL</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        ${itemsHtml}
+                    <tbody style="vertical-align: top;">${itemsHtml}
+                        <tr>
+                            <td style="height: 150px; border-right: 1px solid #00b050;"></td>
+                            <td style="border-right: 1px solid #00b050;"></td>
+                            <td style="border-right: 1px solid #00b050;"></td>
+                            <td style="border-right: 1px solid #00b050;"></td>
+                            <td></td>
+                        </tr>
                     </tbody>
                 </table>
-                <div style="margin-top: 30px; text-align: right;">
-                    <h3 style="margin: 0;">Total Amount: <span style="color: #1e3a8a;">$${parseFloat(po.total_amount).toFixed(2)}</span></h3>
-                </div>
-                <div style="margin-top: 50px; border-top: 1px solid #eee; padding-top: 20px; text-align: center; color: #999; font-size: 12px;">
-                    This is an electronically generated Purchase Order by VendorBridge ERP and does not require a physical signature.
+
+                <div style="display: flex; justify-content: space-between; margin-top: -2px;">
+                    <div style="width: 60%; margin-top: 10px;">
+                        <div style="background-color: #00b050; padding: 5px 10px; font-weight: bold; font-size: 12px;">Comments or Special Instructions</div>
+                        <div style="padding: 10px 0; font-size: 12px;">
+                            Deliveries accepted Mon-Fri, 9AM-4PM.<br>
+                            Please include PO Number on all shipping documents.
+                        </div>
+                    </div>
+                    <div style="width: 38%;">
+                        <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+                            <tr>
+                                <td style="padding: 5px; text-align: left;">SUBTOTAL</td>
+                                <td style="padding: 5px; text-align: right;">${subtotal}</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 5px; text-align: left;">TAX</td>
+                                <td style="padding: 5px; text-align: right;">${tax}</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 5px; text-align: left;">SHIPPING</td>
+                                <td style="padding: 5px; text-align: right;">-</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 5px; text-align: left;">OTHER</td>
+                                <td style="padding: 5px; text-align: right;">-</td>
+                            </tr>
+                            <tr style="background-color: #ffc000; font-weight: bold; font-size: 14px;">
+                                <td style="padding: 8px; text-align: left;">TOTAL</td>
+                                <td style="padding: 8px; text-align: right;">₹ &nbsp;&nbsp;&nbsp;&nbsp;${parseFloat(po.total_amount).toFixed(2)}</td>
+                            </tr>
+                        </table>
+                    </div>
                 </div>
             </div>
         `;

@@ -108,7 +108,7 @@ const Invoices = () => {
         {detailLoading ? (
           <div className="card text-center p-8 text-muted">Generating Invoice View...</div>
         ) : (
-          <div className="card" style={{ padding: '2rem' }}>
+          <div className="card printable-area" style={{ padding: '2rem' }}>
             <div dangerouslySetInnerHTML={{ __html: invoiceHtml }} />
           </div>
         )}
@@ -147,7 +147,7 @@ const Invoices = () => {
                     <td>{inv.po_number}</td>
                     <td>{inv.company_name || inv.vendor_name}</td>
                     <td>{new Date(inv.issued_at).toLocaleDateString()}</td>
-                    <td style={{ textAlign: 'right' }}>${parseFloat(inv.total_amount).toFixed(2)}</td>
+                    <td style={{ textAlign: 'right' }}>₹{parseFloat(inv.total_amount).toFixed(2)}</td>
                     <td>
                       <span className={`badge ${inv.status === 'Paid' ? 'badge-success' : 'badge-warning'}`}>
                         {inv.status}

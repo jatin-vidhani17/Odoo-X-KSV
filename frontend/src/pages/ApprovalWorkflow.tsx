@@ -207,8 +207,7 @@ const ApprovalWorkflow = () => {
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <span className="text-muted">Total Bid Amount:</span>
-              <span className="font-bold" style={{ color: 'var(--accent)' }}>
-                ${totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+              <span className="font-bold" style={{ color: 'var(--accent)' }}>₹{totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
               </span>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -277,8 +276,8 @@ const ApprovalWorkflow = () => {
                   <tr key={item.id}>
                     <td className="font-bold">{item.item_name}</td>
                     <td style={{ textAlign: 'right' }}>{item.quantity_bidded} {item.unit}</td>
-                    <td style={{ textAlign: 'right' }}>${parseFloat(item.unit_price).toFixed(2)}</td>
-                    <td style={{ textAlign: 'right' }}>${parseFloat(item.net_price_with_gst).toFixed(2)}</td>
+                    <td style={{ textAlign: 'right' }}>₹{parseFloat(item.unit_price).toFixed(2)}</td>
+                    <td style={{ textAlign: 'right' }}>₹{parseFloat(item.net_price_with_gst).toFixed(2)}</td>
                   </tr>
                 ))}
               </tbody>

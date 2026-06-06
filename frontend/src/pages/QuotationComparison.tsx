@@ -160,8 +160,7 @@ const QuotationComparison = () => {
               <tr>
                 <td className="font-bold text-muted">Total Price (GST Incl.)</td>
                 {quotations.map((quote: any) => (
-                  <td key={quote.id} style={{ color: 'var(--accent)', fontWeight: 'bold' }}>
-                    ${calculateTotal(quote).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                  <td key={quote.id} style={{ color: 'var(--accent)', fontWeight: 'bold' }}>₹{calculateTotal(quote).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                   </td>
                 ))}
               </tr>
@@ -199,7 +198,7 @@ const QuotationComparison = () => {
                     return (
                       <td key={quote.id}>
                         {bidItem ? (
-                          `$${parseFloat(bidItem.unit_price).toFixed(2)}/unit (Total: $${parseFloat(bidItem.net_price_with_gst).toFixed(2)})`
+                          `₹${parseFloat(bidItem.unit_price).toFixed(2)}/unit (Total: ₹${parseFloat(bidItem.net_price_with_gst).toFixed(2)})`
                         ) : (
                           <span className="text-danger">No Bid</span>
                         )}
@@ -230,7 +229,7 @@ const QuotationComparison = () => {
 
         {recommendedQuote && (
           <p className="text-sm mt-4 text-muted" style={{ color: 'var(--accent)' }}>
-            * <strong>{recommendedQuote.company_name || recommendedQuote.vendor_name}</strong> is recommended based on having the lowest bid price of ${calculateTotal(recommendedQuote).toLocaleString()}.
+            * <strong>{recommendedQuote.company_name || recommendedQuote.vendor_name}</strong> is recommended based on having the lowest bid price of ₹{calculateTotal(recommendedQuote).toLocaleString()}.
           </p>
         )}
 

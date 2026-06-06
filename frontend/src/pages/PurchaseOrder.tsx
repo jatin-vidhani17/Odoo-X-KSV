@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Printer, Mail } from 'lucide-react';
+import { Printer, Mail, CheckCircle, X } from 'lucide-react';
 import { apiFetch } from '../utils/api';
 
 const PurchaseOrder = () => {
@@ -10,15 +10,24 @@ const PurchaseOrder = () => {
   const [loadingList, setLoadingList] = useState(true);
   const [loadingDetails, setLoadingDetails] = useState(false);
   const [sendingEmail, setSendingEmail] = useState(false);
+  const [showEmailModal, setShowEmailModal] = useState(false);
+
+  const [poHtml, setPoHtml] = useState<string>('');
 
   const fetchPurchaseOrders = async () => {
     try {
       setLoadingList(true);
       const res = await apiFetch('/purchase-orders');
       if (res.success && Array.isArray(res.data)) {
-        setPurchaseOrders(res.data);
-        if (res.data.length > 0) {
-          setSelectedPoId(res.data[0].id);
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        let poList = res.data;
+        if (user.role === 'Vendor') {
+          poList = poList.filter((po: any) => po.vendor_id === user.id);
+        }
+        
+        setPurchaseOrders(poList);
+        if (poList.length > 0) {
+          setSelectedPoId(poList[0].id);
         }
       }
     } catch (err: any) {
@@ -36,16 +45,18 @@ const PurchaseOrder = () => {
     if (!selectedPoId) {
       setPoDetails(null);
       setInvoice(null);
+      setPoHtml('');
       return;
     }
 
     const fetchDetails = async () => {
       try {
         setLoadingDetails(true);
-        // 1. Fetch PO details: GET /api/purchase-orders/:id
-        const res = await apiFetch(`/purchase-orders/${selectedPoId}`);
-        if (res.success && res.data) {
-          setPoDetails(res.data);
+        // 1. Fetch PO details (meta info) and PDF HTML
+        const res = await apiFetch(`/purchase-orders/${selectedPoId}/pdf`);
+        if (res.success) {
+          if (res.meta) setPoDetails(res.meta);
+          if (res.pdf_html) setPoHtml(res.pdf_html);
         }
 
         // 2. Fetch all invoices to locate the one matching this po_id
@@ -84,7 +95,7 @@ const PurchaseOrder = () => {
         })
       });
       if (res.success) {
-        alert(res.message);
+        setShowEmailModal(true);
       }
     } catch (err: any) {
       alert(`Email dispatch failed: ${err.message}`);
@@ -151,8 +162,8 @@ const PurchaseOrder = () => {
             onChange={(e) => setSelectedPoId(parseInt(e.target.value, 10) || '')}
           >
             <option value="">Select PO...</option>
-            {purchaseOrders.map(po => (
-              <option key={po.id} value={po.id}>{po.po_number} - {po.company_name} (${parseFloat(po.total_amount).toLocaleString()})</option>
+            {purchaseOrders.map((po) => (
+              <option key={po.id} value={po.id}>{po.po_number} - {po.company_name} (₹{parseFloat(po.total_amount).toLocaleString()})</option>
             ))}
           </select>
         </div>
@@ -165,101 +176,16 @@ const PurchaseOrder = () => {
           Please select a Purchase Order reference from the dropdown above.
         </div>
       ) : (
-        <div className="card" style={{ maxWidth: '900px', margin: '0 auto' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '2px solid var(--border-color)', paddingBottom: '1.5rem', marginBottom: '1.5rem' }}>
-            <div>
-              <h2 style={{ color: 'var(--accent)', fontSize: '2rem', marginBottom: '1rem' }}>PURCHASE ORDER</h2>
-              <div className="text-muted text-sm">
-                <div>VendorBridge ERP</div>
-                <div>123 Enterprise Way</div>
-                <div>Tech District, NY 10001</div>
-              </div>
-            </div>
-            <div style={{ textAlign: 'right' }}>
-              <div style={{ marginBottom: '1rem' }}>
-                <span className="text-muted mr-2">PO Reference:</span>
-                <span className="font-bold text-lg">{poDetails.po_number}</span>
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'auto auto', gap: '0.5rem', textAlign: 'left', background: 'var(--bg-input)', padding: '1rem', borderRadius: '0.5rem' }}>
-                <span className="text-muted">Date:</span>
-                <span className="font-bold">{new Date(poDetails.created_at).toLocaleDateString()}</span>
-                <span className="text-muted">Status:</span>
-                <span className={`badge ${
-                  poDetails.status === 'Completed' ? 'badge-success' : 
-                  poDetails.status === 'Cancelled' ? 'badge-danger' : 
-                  'badge-info'
-                }`}>
-                  {poDetails.status}
-                </span>
-                <span className="text-muted">RFQ Ref:</span>
-                <span className="font-bold">{poDetails.rfq_title}</span>
-              </div>
-            </div>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', marginBottom: '2rem' }}>
-            <div>
-              <h3 className="text-muted text-sm uppercase mb-2">Vendor To:</h3>
-              <div className="font-bold text-lg">{poDetails.company_name || poDetails.vendor_name}</div>
-              <div className="text-muted text-sm">
-                <div>{poDetails.vendor_address || 'Vendor Address Not Set'}</div>
-                <div>Email: {poDetails.vendor_email}</div>
-                <div>Phone: {poDetails.vendor_phone || 'N/A'}</div>
-                <div>GSTIN: {poDetails.gst_number}</div>
-              </div>
-            </div>
-            <div>
-              <h3 className="text-muted text-sm uppercase mb-2">Ship To:</h3>
-              <div className="font-bold text-lg">VendorBridge HQ</div>
-              <div className="text-muted text-sm">
-                <div>Attn: Receiving Dept</div>
-                <div>123 Enterprise Way</div>
-                <div>Tech District, NY 10001</div>
-              </div>
-            </div>
-          </div>
-
-          <div className="table-container" style={{ marginBottom: '2rem' }}>
-            <table style={{ border: '1px solid var(--border-color)' }}>
-              <thead style={{ backgroundColor: 'var(--bg-input)' }}>
-                <tr>
-                  <th>Item Description</th>
-                  <th style={{ textAlign: 'center' }}>Qty</th>
-                  <th style={{ textAlign: 'right' }}>Unit Price</th>
-                  <th style={{ textAlign: 'right' }}>GST</th>
-                  <th style={{ textAlign: 'right' }}>Total (incl. GST)</th>
-                </tr>
-              </thead>
-              <tbody>
-                {poDetails.items?.map((item: any) => (
-                  <tr key={item.id}>
-                    <td>{item.item_name}</td>
-                    <td style={{ textAlign: 'center' }}>{item.quantity_bidded} {item.unit}</td>
-                    <td style={{ textAlign: 'right' }}>${parseFloat(item.unit_price).toFixed(2)}</td>
-                    <td style={{ textAlign: 'right' }}>{parseFloat(item.gst_percentage).toFixed(1)}%</td>
-                    <td style={{ textAlign: 'right' }}>${parseFloat(item.net_price_with_gst).toFixed(2)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-            <div style={{ width: '300px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '1rem 0' }}>
-                <span className="font-bold text-lg">Grand Total:</span>
-                <span className="font-bold text-lg" style={{ color: 'var(--accent)' }}>
-                  ${parseFloat(poDetails.total_amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                </span>
-              </div>
-            </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          <div className="card printable-area" style={{ padding: '0', overflow: 'hidden', alignSelf: 'center' }}>
+            <div dangerouslySetInnerHTML={{ __html: poHtml }} />
           </div>
 
           {invoice ? (
-            <div className="mt-4 pt-4" style={{ borderTop: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'var(--bg-input)', padding: '1rem', borderRadius: '4px' }}>
+            <div className="card mt-4" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'var(--bg-input)', padding: '1rem', borderRadius: '4px' }}>
               <div>
                 <strong>Associated Invoice: {invoice.invoice_number}</strong>
-                <div className="text-sm text-muted">Status: {invoice.status} | Tax: ${parseFloat(invoice.tax_amount).toFixed(2)}</div>
+                <div className="text-sm text-muted">Status: {invoice.status} | Tax: ₹{parseFloat(invoice.tax_amount).toFixed(2)}</div>
               </div>
               {invoice.status === 'Unpaid' ? (
                 JSON.parse(localStorage.getItem('user') || '{}').role === 'Procurement Officer' ? (
@@ -274,7 +200,7 @@ const PurchaseOrder = () => {
               )}
             </div>
           ) : (
-            <div className="mt-4 pt-4" style={{ borderTop: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'var(--bg-input)', padding: '1rem', borderRadius: '4px' }}>
+            <div className="card mt-4" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'var(--bg-input)', padding: '1rem', borderRadius: '4px' }}>
               <div>
                 <strong>No Invoice Generated Yet</strong>
                 <div className="text-sm text-muted">Generate an invoice to request payment for this Purchase Order.</div>
@@ -304,9 +230,54 @@ const PurchaseOrder = () => {
               )}
             </div>
           )}
-
-          <div className="mt-4 pt-4 text-center text-muted text-sm" style={{ borderTop: '1px solid var(--border-color)' }}>
-            <p>Please include PO Number on all invoices and shipping documents.</p>
+        </div>
+      )}
+      {showEmailModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.6)',
+          backdropFilter: 'blur(4px)',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          zIndex: 1000
+        }}>
+          <div className="card" style={{
+            maxWidth: '450px',
+            width: '90%',
+            padding: '2rem',
+            textAlign: 'center',
+            position: 'relative',
+            animation: 'fadeIn 0.3s ease-out'
+          }}>
+            <button 
+              onClick={() => setShowEmailModal(false)}
+              style={{ position: 'absolute', top: '15px', right: '15px', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}
+            >
+              <X size={24} />
+            </button>
+            <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '80px', height: '80px', borderRadius: '50%', backgroundColor: 'rgba(16, 185, 129, 0.1)', color: '#10b981', marginBottom: '1.5rem' }}>
+              <CheckCircle size={48} />
+            </div>
+            <h2 style={{ marginBottom: '1rem' }}>Email Sent Successfully!</h2>
+            <p className="text-muted" style={{ marginBottom: '1.5rem' }}>
+              The Official Purchase Order <strong>{poDetails?.po_number}</strong> has been securely dispatched.
+            </p>
+            <div style={{ textAlign: 'left', backgroundColor: 'var(--bg-input)', padding: '1rem', borderRadius: '8px', marginBottom: '1.5rem' }}>
+              <div style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '8px', color: 'var(--text-color)' }}>RECIPIENTS:</div>
+              <ul style={{ margin: 0, paddingLeft: '20px', color: 'var(--text-muted)', fontSize: '14px', lineHeight: '1.6' }}>
+                <li>{poDetails?.vendor_email || "vendor@example.com"} (Vendor)</li>
+                <li>procurement@vendorbridge.com (Procurement Officer)</li>
+                <li>manager@vendorbridge.com (Approving Manager)</li>
+              </ul>
+            </div>
+            <button className="btn btn-primary" style={{ width: '100%', padding: '0.75rem' }} onClick={() => setShowEmailModal(false)}>
+              Continue
+            </button>
           </div>
         </div>
       )}

@@ -98,7 +98,7 @@ const Dashboard = () => {
           <div className="kpi-label">Pending Approvals</div>
         </div>
         <div className="kpi-card">
-          <div className="kpi-value">${kpis.monthlySpend.toLocaleString()}</div>
+          <div className="kpi-value">₹{kpis.monthlySpend.toLocaleString()}</div>
           <div className="kpi-label">Monthly Spend</div>
         </div>
         <div className="kpi-card">

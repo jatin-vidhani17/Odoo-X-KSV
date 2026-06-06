@@ -81,7 +81,7 @@ const VendorQuotations = () => {
                   'badge-info'
                 }`}>{selectedQuote.status}</span></div>
                 <div><strong>Notes:</strong> {selectedQuote.vendor_notes || 'None'}</div>
-                <div><strong>Bid Total (incl. GST):</strong> ${calculateTotal(selectedQuote).toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
+                <div><strong>Bid Total (incl. GST):</strong> ₹{calculateTotal(selectedQuote).toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
               </div>
 
               <h3>Itemized Price Breakdown</h3>
@@ -101,9 +101,9 @@ const VendorQuotations = () => {
                       <tr key={item.id}>
                         <td className="font-bold">{item.item_name}</td>
                         <td style={{ textAlign: 'right' }}>{item.quantity_bidded} {item.unit}</td>
-                        <td style={{ textAlign: 'right' }}>${parseFloat(item.unit_price).toFixed(2)}</td>
+                        <td style={{ textAlign: 'right' }}>₹{parseFloat(item.unit_price).toFixed(2)}</td>
                         <td style={{ textAlign: 'right' }}>{parseFloat(item.gst_percentage).toFixed(1)}%</td>
-                        <td style={{ textAlign: 'right' }}>${parseFloat(item.net_price_with_gst).toFixed(2)}</td>
+                        <td style={{ textAlign: 'right' }}>₹{parseFloat(item.net_price_with_gst).toFixed(2)}</td>
                       </tr>
                     ))}
                   </tbody>

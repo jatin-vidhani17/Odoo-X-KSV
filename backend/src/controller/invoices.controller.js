@@ -59,7 +59,7 @@ const createInvoice = async (req, res) => {
 const getAllInvoices = async (req, res) => {
     try {
         const query = `
-            SELECT inv.*, po.po_number, q.rfq_id, r.title AS rfq_title, u.name AS vendor_name, vd.company_name
+            SELECT inv.*, po.po_number, q.rfq_id, q.vendor_id, r.title AS rfq_title, u.name AS vendor_name, vd.company_name
             FROM invoices inv
             INNER JOIN purchase_orders po ON inv.po_id = po.id
             INNER JOIN quotations q ON po.quotation_id = q.id
@@ -217,65 +217,134 @@ const getInvoicePDF = async (req, res) => {
             [invoice.po_id]
         );
 
-        const itemsHtml = items.map((item, index) => `
+        // Helper to convert number to words (simple implementation for mockup)
+        const amountInWords = (amount) => {
+            return "Amount in words would be written here. (Generated computationally)"; // Mocked for simplicity in this template
+        };
+
+        const itemsHtml = items.map((item, index) => {
+            const unitPrice = parseFloat(item.unit_price);
+            const qty = parseFloat(item.quantity_bidded);
+            const netAmount = unitPrice * qty;
+            const taxRate = parseFloat(item.gst_percentage);
+            const taxAmount = (netAmount * taxRate) / 100;
+            const totalAmount = netAmount + taxAmount;
+            
+            return `
             <tr>
-                <td style="padding: 10px; border-bottom: 1px solid #ddd;">${index + 1}</td>
-                <td style="padding: 10px; border-bottom: 1px solid #ddd;">${item.item_name}</td>
-                <td style="padding: 10px; border-bottom: 1px solid #ddd; text-align: right;">${item.quantity_bidded} ${item.unit}</td>
-                <td style="padding: 10px; border-bottom: 1px solid #ddd; text-align: right;">$${parseFloat(item.unit_price).toFixed(2)}</td>
-                <td style="padding: 10px; border-bottom: 1px solid #ddd; text-align: right;">${item.gst_percentage}%</td>
-                <td style="padding: 10px; border-bottom: 1px solid #ddd; text-align: right;">$${parseFloat(item.net_price_with_gst).toFixed(2)}</td>
+                <td style="padding: 5px; border: 1px solid #333; text-align: center;">${index + 1}</td>
+                <td style="padding: 5px; border: 1px solid #333;">${item.item_name}<br>
+                    <span style="font-size: 10px;">HSN: 8471 (Mock)</span>
+                </td>
+                <td style="padding: 5px; border: 1px solid #333; text-align: right;">₹${unitPrice.toFixed(2)}</td>
+                <td style="padding: 5px; border: 1px solid #333; text-align: center;">${qty}</td>
+                <td style="padding: 5px; border: 1px solid #333; text-align: right;">₹${netAmount.toFixed(2)}</td>
+                <td style="padding: 5px; border: 1px solid #333; text-align: center;">${(taxRate / 2).toFixed(1)}%<br>${(taxRate / 2).toFixed(1)}%</td>
+                <td style="padding: 5px; border: 1px solid #333; text-align: center;">CGST<br>SGST</td>
+                <td style="padding: 5px; border: 1px solid #333; text-align: right;">₹${(taxAmount / 2).toFixed(2)}<br>₹${(taxAmount / 2).toFixed(2)}</td>
+                <td style="padding: 5px; border: 1px solid #333; text-align: right;">₹${totalAmount.toFixed(2)}</td>
             </tr>
-        `).join("");
+            `;
+        }).join("");
 
         const pdfHtml = `
-            <div style="font-family: Arial, sans-serif; padding: 40px; color: #333; background-color: white; max-width: 800px; margin: auto; border: 1px solid #eee;">
-                <div style="display: flex; justify-content: space-between; border-bottom: 2px solid #10b981; padding-bottom: 20px;">
+            <div style="font-family: Arial, sans-serif; padding: 40px; color: #000; background-color: white; max-width: 800px; margin: auto; border: 1px solid #eee; font-size: 13px;">
+                <div style="display: flex; justify-content: space-between; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px;">
                     <div>
-                        <h1 style="margin: 0; color: #10b981;">VendorBridge ERP</h1>
-                        <p style="margin: 5px 0 0 0; color: #666;">Tax Invoice</p>
+                        <h1 style="margin: 0; font-size: 28px; letter-spacing: -1px;">VendorBridge</h1>
+                        <div style="width: 100px; height: 3px; background-color: #ff9900; margin-top: 2px; border-radius: 50% 50% 0 0;"></div>
                     </div>
                     <div style="text-align: right;">
-                        <h2 style="margin: 0; color: #666;">${invoice.invoice_number}</h2>
-                        <p style="margin: 5px 0 0 0;">Date: ${new Date(invoice.issued_at).toLocaleDateString()}</p>
-                        <span style="display: inline-block; padding: 5px 10px; background: #ecfdf5; color: #047857; border-radius: 4px; font-weight: bold; margin-top: 5px;">${invoice.status}</span>
+                        <h3 style="margin: 0; font-size: 16px;">Tax Invoice/Bill of Supply/Cash Memo</h3>
+                        <p style="margin: 5px 0 0 0;">(Original for Recipient)</p>
                     </div>
                 </div>
-                <div style="margin: 30px 0; display: flex; justify-content: space-between;">
-                    <div>
-                        <h4 style="margin: 0 0 10px 0; color: #10b981;">FROM (VENDOR):</h4>
-                        <p style="margin: 0;"><strong>${invoice.company_name || invoice.vendor_name}</strong></p>
-                        <p style="margin: 5px 0;">GSTIN: ${invoice.gst_number || "N/A"}</p>
+
+                <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+                    <div style="width: 48%;">
+                        <p style="margin: 0 0 5px 0;"><strong>Sold By :</strong></p>
+                        <p style="margin: 0; line-height: 1.4;">${invoice.company_name || invoice.vendor_name}<br>
+                            123 Vendor Industrial Park, Main Road,<br>
+                            Tech District, Mumbai, 400001<br>
+                            IN
+                        </p>
                     </div>
-                    <div style="text-align: right;">
-                        <h4 style="margin: 0 0 10px 0; color: #10b981;">BILL TO / PO REF:</h4>
-                        <p style="margin: 0;">PO Number: ${invoice.po_number}</p>
-                        <p style="margin: 5px 0;">RFQ Title: ${invoice.rfq_title}</p>
+                    <div style="width: 48%; text-align: right;">
+                        <p style="margin: 0 0 5px 0;"><strong>Billing Address :</strong></p>
+                        <p style="margin: 0; line-height: 1.4;">
+                            VendorBridge Procurement Dept<br>
+                            VendorBridge Inc, 10th floor Rain<br>
+                            Tree Place, No 7, McNichols Road<br>
+                            CHENNAI, TAMIL NADU, 600031<br>
+                            IN
+                        </p>
                     </div>
                 </div>
-                <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+
+                <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+                    <div style="width: 48%;">
+                        <p style="margin: 0 0 5px 0;"><strong>PAN No:</strong> ABCDE1234F</p>
+                        <p style="margin: 0;"><strong>GST Registration No:</strong>${invoice.gst_number || "33ABCDE1234F1Z5"}</p>
+                    </div>
+                    <div style="width: 48%; text-align: right;">
+                        <p style="margin: 0 0 5px 0;"><strong>Shipping Address :</strong></p>
+                        <p style="margin: 0; line-height: 1.4;">
+                            VendorBridge Procurement Dept<br>
+                            VendorBridge Inc, 10th floor Rain<br>
+                            Tree Place, No 7, McNichols Road<br>
+                            CHENNAI, TAMIL NADU, 600031<br>
+                            IN
+                        </p>
+                    </div>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+                    <div style="width: 48%;">
+                        <p style="margin: 0 0 5px 0;"><strong>Order Number:</strong>${invoice.po_number}</p>
+                        <p style="margin: 0;"><strong>Order Date:</strong>${new Date().toLocaleDateString('en-GB').replace(/\//g, '.')}</p>
+                    </div>
+                    <div style="width: 48%; text-align: right;">
+                        <p style="margin: 0 0 5px 0;"><strong>Invoice Number :</strong>${invoice.invoice_number}</p>
+                        <p style="margin: 0 0 5px 0;"><strong>Invoice Details :</strong> TN-MAA4-${Math.floor(Math.random() * 10000)}</p>
+                        <p style="margin: 0;"><strong>Invoice Date :</strong>${new Date(invoice.issued_at).toLocaleDateString('en-GB').replace(/\//g, '.')}</p>
+                    </div>
+                </div>
+
+                <table style="width: 100%; border-collapse: collapse; margin-bottom: 0;">
                     <thead>
-                        <tr style="background: #f3f4f6;">
-                            <th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">#</th>
-                            <th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">Item Description</th>
-                            <th style="padding: 10px; text-align: right; border-bottom: 2px solid #ddd;">Qty</th>
-                            <th style="padding: 10px; text-align: right; border-bottom: 2px solid #ddd;">Unit Price</th>
-                            <th style="padding: 10px; text-align: right; border-bottom: 2px solid #ddd;">GST</th>
-                            <th style="padding: 10px; text-align: right; border-bottom: 2px solid #ddd;">Total</th>
+                        <tr style="background-color: #f9f9f9;">
+                            <th style="padding: 5px; border: 1px solid #333; text-align: center; width: 5%;">Sl.<br>No</th>
+                            <th style="padding: 5px; border: 1px solid #333; text-align: left; width: 35%;">Description</th>
+                            <th style="padding: 5px; border: 1px solid #333; text-align: right;">Unit Price</th>
+                            <th style="padding: 5px; border: 1px solid #333; text-align: center;">Qty</th>
+                            <th style="padding: 5px; border: 1px solid #333; text-align: right;">Net<br>Amount</th>
+                            <th style="padding: 5px; border: 1px solid #333; text-align: center;">Tax<br>Rate</th>
+                            <th style="padding: 5px; border: 1px solid #333; text-align: center;">Tax<br>Type</th>
+                            <th style="padding: 5px; border: 1px solid #333; text-align: right;">Tax<br>Amount</th>
+                            <th style="padding: 5px; border: 1px solid #333; text-align: right;">Total<br>Amount</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        ${itemsHtml}
+                    <tbody>${itemsHtml}
+                        <tr>
+                            <td colspan="8" style="padding: 5px; border: 1px solid #333; text-align: left;"><strong>TOTAL:</strong></td>
+                            <td style="padding: 5px; border: 1px solid #333; text-align: right;"><strong>₹${parseFloat(invoice.total_amount).toFixed(2)}</strong></td>
+                        </tr>
                     </tbody>
                 </table>
-                <div style="margin-top: 30px; text-align: right; line-height: 1.6;">
-                    <p style="margin: 0;">Subtotal: $${parseFloat(invoice.subtotal_amount).toFixed(2)}</p>
-                    <p style="margin: 5px 0 0 0;">Tax: $${parseFloat(invoice.tax_amount).toFixed(2)}</p>
-                    <hr style="margin: 10px 0; border: none; border-top: 1px solid #ddd; display: inline-block; width: 200px;">
-                    <h3 style="margin: 0;">Grand Total: <span style="color: #10b981;">$${parseFloat(invoice.total_amount).toFixed(2)}</span></h3>
+
+                <div style="border: 1px solid #333; border-top: none; padding: 5px; margin-bottom: 20px;">
+                    <p style="margin: 0 0 5px 0;"><strong>Amount in Words:</strong></p>
+                    <p style="margin: 0;"><strong>Rupees ${parseFloat(invoice.total_amount).toFixed(2)} Only</strong></p>
                 </div>
-                <div style="margin-top: 50px; border-top: 1px solid #eee; padding-top: 20px; text-align: center; color: #999; font-size: 12px;">
-                    Thank you for your business! Please settle unpaid invoices within the agreed payment terms.
+
+                <div style="display: flex; justify-content: flex-end;">
+                    <div style="text-align: right; width: 300px;">
+                        <p style="margin: 0 0 10px 0;"><strong>For ${invoice.company_name || invoice.vendor_name}:</strong></p>
+                        <div style="height: 40px; margin-bottom: 5px; display: flex; align-items: center; justify-content: flex-end;">
+                            <span style="font-family: 'Brush Script MT', cursive; font-size: 24px; color: #000; padding-right: 20px;">Authorized</span>
+                        </div>
+                        <p style="margin: 0;"><strong>Authorized Signatory</strong></p>
+                    </div>
                 </div>
             </div>
         `;
