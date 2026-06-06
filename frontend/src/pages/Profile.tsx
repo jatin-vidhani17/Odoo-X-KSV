@@ -3,18 +3,13 @@ import { User, Mail, Phone, Briefcase, Hash } from 'lucide-react';
 
 const Profile = () => {
   const [user, setUser] = useState<any>(null);
-  const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
 
   useEffect(() => {
     // Load from localStorage (this handles both backend auth user object and the frontend-only profile photo)
     const storedUser = localStorage.getItem('user');
-    const storedPhoto = localStorage.getItem('profilePhoto');
     
     if (storedUser) {
       setUser(JSON.parse(storedUser));
-    }
-    if (storedPhoto) {
-      setProfilePhoto(storedPhoto);
     }
   }, []);
 
@@ -32,8 +27,8 @@ const Profile = () => {
       <div className="card" style={{ maxWidth: '800px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '2rem', marginBottom: '2rem', paddingBottom: '2rem', borderBottom: '1px solid var(--border-color)' }}>
           <div style={{ width: '120px', height: '120px', borderRadius: '50%', backgroundColor: 'var(--bg-input)', overflow: 'hidden', border: '3px solid var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            {profilePhoto ? (
-              <img src={profilePhoto} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            {user.profile_photo ? (
+              <img src={user.profile_photo} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             ) : (
               <User size={64} className="text-muted" />
             )}

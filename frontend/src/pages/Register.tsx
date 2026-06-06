@@ -38,10 +38,50 @@ const Register = () => {
     setLoading(true);
 
     try {
+      let finalProfilePhotoUrl = '';
+
+      const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+      const file = fileInput?.files?.[0];
+
+      if (file) {
+        // Upload directly to Cloudinary from React
+        const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || 'YOUR_CLOUD_NAME';
+        const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET || 'YOUR_UPLOAD_PRESET';
+
+        if (cloudName === 'YOUR_CLOUD_NAME' || uploadPreset === 'YOUR_UPLOAD_PRESET') {
+          throw new Error('Please configure VITE_CLOUDINARY_CLOUD_NAME and VITE_CLOUDINARY_UPLOAD_PRESET in frontend/.env');
+        }
+
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('upload_preset', uploadPreset);
+
+        const cloudinaryRes = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+          method: 'POST',
+          body: formData
+        });
+
+        const cloudinaryData = await cloudinaryRes.json();
+
+        if (!cloudinaryRes.ok) {
+          throw new Error(cloudinaryData.error?.message || 'Failed to upload image to Cloudinary');
+        }
+
+        finalProfilePhotoUrl = cloudinaryData.secure_url;
+      }
+
+      // Now send the registration data to our backend
+      const payload = {
+        ...formData,
+        profile_photo: finalProfilePhotoUrl || null
+      };
+
       const response = await fetch('http://localhost:5000/auth/register', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
       });
 
       const data = await response.json();
@@ -50,9 +90,6 @@ const Register = () => {
         throw new Error(data.message || 'Registration failed');
       }
 
-      if (profilePhoto) {
-        localStorage.setItem('profilePhoto', profilePhoto);
-      }
       navigate('/login');
     } catch (err: any) {
       setError(err.message);

@@ -41,7 +41,8 @@ const login = async (req, res) => {
                 id: user.id,
                 name: user.name,
                 email: user.email,
-                role: user.role
+                role: user.role,
+                profile_photo: user.profile_photo
             }
         });
     } catch (error) {
@@ -52,7 +53,7 @@ const login = async (req, res) => {
 
 const register = async (req, res) => {
     try {
-        const { name, email, password, phone, role, company_name, gst_number } = req.body;
+        const { name, email, password, phone, role, company_name, gst_number, profile_photo } = req.body;
 
         if (!name || !email || !password || !role) {
             return res.status(400).json({ message: "Missing required fields" });
@@ -72,8 +73,8 @@ const register = async (req, res) => {
 
         try {
             const [result] = await connection.query(
-                'INSERT INTO users (username, password, name, email, phone, role) VALUES (?, ?, ?, ?, ?, ?)',
-                [email, hashedPassword, name, email, phone || null, role] // Using email as username for simplicity
+                'INSERT INTO users (username, password, name, email, phone, role, profile_photo) VALUES (?, ?, ?, ?, ?, ?, ?)',
+                [email, hashedPassword, name, email, phone || null, role, profile_photo] // Using email as username for simplicity
             );
 
             const userId = result.insertId;
@@ -104,7 +105,7 @@ const register = async (req, res) => {
 
     } catch (error) {
         console.error("Registration error:", error);
-        res.status(500).json({ message: "Internal server error" });
+        res.status(500).json({ message: "Internal server error", detail: error.message, stack: error.stack });
     }
 };
 

@@ -74,15 +74,15 @@ const ProcurementLayout = () => {
             <button className="text-muted" aria-label="Settings">
               <Settings size={20} />
             </button>
-            <div className="flex items-center gap-2 border-l border-gray-700 pl-4 ml-2">
-              <Link to="profile" className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center text-white font-bold border border-gray-600 hover:border-gray-400 transition-colors" style={{ overflow: 'hidden' }}>
-                {localStorage.getItem('profilePhoto') ? (
-                  <img src={localStorage.getItem('profilePhoto') as string} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            <div className="flex items-center gap-2 pl-4 ml-2" style={{ borderLeft: '1px solid var(--border-color)' }}>
+              <Link to="profile" className="flex items-center justify-center transition-colors" style={{ width: '32px', height: '32px', minWidth: '32px', borderRadius: '50%', overflow: 'hidden', backgroundColor: 'var(--bg-input)', border: '1px solid var(--border-color)' }}>
+                {JSON.parse(localStorage.getItem('user') || '{}').profile_photo ? (
+                  <img src={JSON.parse(localStorage.getItem('user') || '{}').profile_photo} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 ) : (
                   <User size={16} />
                 )}
               </Link>
-              <button onClick={handleLogout} className="text-muted flex items-center gap-1 hover:text-white" style={{fontSize: '0.875rem'}}>
+              <button onClick={handleLogout} className="text-muted flex items-center gap-1" style={{fontSize: '0.875rem'}}>
                 <LogOut size={16} />
                 <span>Logout</span>
               </button>

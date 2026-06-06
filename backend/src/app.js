@@ -12,5 +12,10 @@ const authroutes = require("./routes/auth.routes");
 app.use("/users", userroutes);
 app.use("/auth", authroutes);
 
-    
+// Global Error Handler to always return JSON
+app.use((err, req, res, next) => {
+    console.error("Global Error:", err);
+    res.status(500).json({ message: err.message || "Something went wrong!" });
+});
+
 module.exports = app;
