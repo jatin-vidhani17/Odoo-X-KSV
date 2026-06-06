@@ -1,4 +1,4 @@
-import { Outlet, NavLink, useNavigate } from 'react-router-dom';
+import { Outlet, NavLink, useNavigate, Link } from 'react-router-dom';
 import { 
   LayoutDashboard, 
   Users, 
@@ -75,9 +75,13 @@ const ProcurementLayout = () => {
               <Settings size={20} />
             </button>
             <div className="flex items-center gap-2 border-l border-gray-700 pl-4 ml-2">
-              <div className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center text-white font-bold">
-                <User size={16} />
-              </div>
+              <Link to="profile" className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center text-white font-bold border border-gray-600 hover:border-gray-400 transition-colors" style={{ overflow: 'hidden' }}>
+                {localStorage.getItem('profilePhoto') ? (
+                  <img src={localStorage.getItem('profilePhoto') as string} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                ) : (
+                  <User size={16} />
+                )}
+              </Link>
               <button onClick={handleLogout} className="text-muted flex items-center gap-1 hover:text-white" style={{fontSize: '0.875rem'}}>
                 <LogOut size={16} />
                 <span>Logout</span>

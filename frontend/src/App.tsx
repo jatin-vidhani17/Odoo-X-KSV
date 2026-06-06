@@ -20,6 +20,7 @@ import ApprovalWorkflow from './pages/ApprovalWorkflow';
 import PurchaseOrder from './pages/PurchaseOrder';
 import ActivityLogs from './pages/ActivityLogs';
 import Reports from './pages/Reports';
+import Profile from './pages/Profile';
 
 // Admin Pages
 import AdminDashboard from './pages/AdminDashboard';
@@ -56,6 +57,7 @@ function App() {
           <Route path="purchase-orders" element={<PurchaseOrder />} />
           <Route path="activity" element={<ActivityLogs />} />
           <Route path="reports" element={<Reports />} />
+          <Route path="profile" element={<Profile />} />
         </Route>
 
         {/* Admin Role */}
@@ -64,6 +66,7 @@ function App() {
           <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="users" element={<AdminUsers />} />
           <Route path="vendors" element={<AdminVendorsReview />} />
+          <Route path="profile" element={<Profile />} />
         </Route>
 
         {/* Vendor Role */}
@@ -74,6 +77,7 @@ function App() {
           <Route path="rfqs" element={<div style={{ padding: '2rem' }}><h2>Vendor RFQs</h2><p className="text-muted">List of RFQs assigned to this vendor.</p></div>} />
           <Route path="quotations" element={<div style={{ padding: '2rem' }}><h2>My Quotations</h2><p className="text-muted">Manage submitted quotations.</p></div>} />
           <Route path="purchase-orders" element={<PurchaseOrder />} />
+          <Route path="profile" element={<Profile />} />
         </Route>
 
         {/* Manager Role */}
@@ -81,6 +85,7 @@ function App() {
           <Route index element={<Navigate to="/manager/dashboard" replace />} />
           <Route path="dashboard" element={<ManagerDashboard />} />
           <Route path="approvals" element={<ApprovalWorkflow />} />
+          <Route path="profile" element={<Profile />} />
         </Route>
       </Routes>
     </BrowserRouter>
