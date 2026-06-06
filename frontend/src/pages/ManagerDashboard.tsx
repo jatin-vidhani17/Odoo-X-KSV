@@ -14,7 +14,7 @@ const ManagerDashboard = () => {
       try {
         setLoading(true);
         // Load summary metrics
-        const summaryRes = await apiFetch('/dashboard/summary');
+        const summaryRes = await apiFetch('/dashboard').catch(() => ({ success: false, data: null }));
         if (summaryRes.success) {
           setSummary(summaryRes.data);
         }

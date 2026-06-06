@@ -3,6 +3,7 @@ const router = express.Router();
 const {
     createRFQ,
     getAllRFQs,
+    getRFQsByVendor,
     getRFQById,
     updateRFQ,
     deleteRFQ,
@@ -17,6 +18,7 @@ const {
 // RFQ Base Routes
 router.post("/", createRFQ);
 router.get("/", getAllRFQs);
+router.get("/vendor/:vendorId", getRFQsByVendor);
 router.get("/:id", getRFQById);
 router.put("/:id", updateRFQ);
 router.delete("/:id", deleteRFQ);

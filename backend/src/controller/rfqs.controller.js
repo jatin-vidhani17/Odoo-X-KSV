@@ -15,7 +15,7 @@ const createRFQ = async (req, res) => {
         try {
             // Insert RFQ
             const [rfqResult] = await connection.query(
-                "INSERT INTO rfqs (title, description, category, deadline, attachment_url, created_by) VALUES (?, ?, ?, ?, ?, ?)",
+                "INSERT INTO rfqs (title, description, category, deadline, attachment_url, created_by, status) VALUES (?, ?, ?, ?, ?, ?, 'Published')",
                 [title, description || null, category, deadline, attachment_url || null, created_by]
             );
 
@@ -76,6 +76,30 @@ const getAllRFQs = async (req, res) => {
         return res.status(200).json({ success: true, data: rows });
     } catch (error) {
         console.error("Error in getAllRFQs:", error);
+        return res.status(500).json({ success: false, message: "Internal server error" });
+    }
+};
+
+// 2.5 Get RFQs Assigned to a Vendor
+const getRFQsByVendor = async (req, res) => {
+    try {
+        const vendorId = parseInt(req.params.vendorId, 10);
+        if (isNaN(vendorId)) {
+            return res.status(400).json({ success: false, message: "Invalid vendor ID" });
+        }
+
+        const query = `
+            SELECT r.*, u.name AS creator_name 
+            FROM rfqs r
+            INNER JOIN rfq_vendors rv ON r.id = rv.rfq_id
+            INNER JOIN users u ON r.created_by = u.id
+            WHERE rv.vendor_id = ?
+            ORDER BY r.id DESC
+        `;
+        const [rows] = await db.query(query, [vendorId]);
+        return res.status(200).json({ success: true, data: rows });
+    } catch (error) {
+        console.error("Error in getRFQsByVendor:", error);
         return res.status(500).json({ success: false, message: "Internal server error" });
     }
 };
@@ -418,6 +442,7 @@ const getRFQComparison = async (req, res) => {
 module.exports = {
     createRFQ,
     getAllRFQs,
+    getRFQsByVendor,
     getRFQById,
     updateRFQ,
     deleteRFQ,

@@ -14,7 +14,7 @@ const Login = () => {
     setLoading(true);
 
     try {
-      const response = await fetch('/api/auth/login', {
+      const response = await fetch('http://localhost:5000/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
@@ -52,22 +52,22 @@ const Login = () => {
         <form onSubmit={handleLogin}>
           <div className="form-group">
             <label className="form-label">Email</label>
-            <input 
-              type="email" 
-              required 
-              className="form-control" 
-              placeholder="Enter your email" 
+            <input
+              type="email"
+              required
+              className="form-control"
+              placeholder="Enter your email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
           </div>
           <div className="form-group">
             <label className="form-label">Password</label>
-            <input 
-              type="password" 
-              required 
-              className="form-control" 
-              placeholder="Enter your password" 
+            <input
+              type="password"
+              required
+              className="form-control"
+              placeholder="Enter your password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />

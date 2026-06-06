@@ -5,7 +5,7 @@ import { Send, Eye, X } from 'lucide-react';
 const VendorRFQs = () => {
   const [rfqs, setRfqs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  
+
   // Bid states
   const [selectedRfq, setSelectedRfq] = useState<any>(null);
   const [bidItems, setBidItems] = useState<any[]>([]);
@@ -15,9 +15,13 @@ const VendorRFQs = () => {
   const fetchRFQs = async () => {
     try {
       setLoading(true);
-      const res = await apiFetch('/rfqs');
+      const storedUser = localStorage.getItem('user');
+      const user = storedUser ? JSON.parse(storedUser) : null;
+      const vendorId = user?.id || 11; // Fallback to 11
+
+      const res = await apiFetch(`/rfqs/vendor/${vendorId}`);
       if (res.success && Array.isArray(res.data)) {
-        // Vendors only see Published RFQs
+        // Vendors only see Published RFQs that are assigned to them
         const published = res.data.filter((r: any) => r.status === 'Published');
         setRfqs(published);
       }
@@ -105,7 +109,7 @@ const VendorRFQs = () => {
             activity_type: 'Quotation Submission',
             log_summary: `Vendor ${user?.name || 'Vendor'} submitted quotation for RFQ: ${selectedRfq.title}`
           })
-        }).catch(() => {});
+        }).catch(() => { });
 
         alert("Quotation bid submitted successfully!");
         setSelectedRfq(null);
@@ -152,34 +156,34 @@ const VendorRFQs = () => {
                       <td className="font-bold">{item.item_name}</td>
                       <td>{item.quantity_bidded} {item.unit}</td>
                       <td>
-                        <input 
-                          type="number" 
-                          step="0.01" 
+                        <input
+                          type="number"
+                          step="0.01"
                           min="0.01"
-                          required 
-                          className="form-control" 
-                          placeholder="0.00" 
-                          value={item.unit_price} 
-                          onChange={(e) => handleBidFieldChange(idx, 'unit_price', e.target.value)} 
+                          required
+                          className="form-control"
+                          placeholder="0.00"
+                          value={item.unit_price}
+                          onChange={(e) => handleBidFieldChange(idx, 'unit_price', e.target.value)}
                         />
                       </td>
                       <td>
-                        <input 
-                          type="number" 
-                          step="0.1" 
-                          className="form-control" 
-                          value={item.gst_percentage} 
-                          onChange={(e) => handleBidFieldChange(idx, 'gst_percentage', e.target.value)} 
+                        <input
+                          type="number"
+                          step="0.1"
+                          className="form-control"
+                          value={item.gst_percentage}
+                          onChange={(e) => handleBidFieldChange(idx, 'gst_percentage', e.target.value)}
                         />
                       </td>
                       <td>
-                        <input 
-                          type="number" 
-                          min="1" 
-                          required 
-                          className="form-control" 
-                          value={item.delivery_timeline_days} 
-                          onChange={(e) => handleBidFieldChange(idx, 'delivery_timeline_days', e.target.value)} 
+                        <input
+                          type="number"
+                          min="1"
+                          required
+                          className="form-control"
+                          value={item.delivery_timeline_days}
+                          onChange={(e) => handleBidFieldChange(idx, 'delivery_timeline_days', e.target.value)}
                         />
                       </td>
                     </tr>
@@ -190,10 +194,10 @@ const VendorRFQs = () => {
 
             <div className="form-group">
               <label className="form-label">Vendor Response Notes (optional)</label>
-              <textarea 
-                className="form-control" 
-                rows={3} 
-                placeholder="Add warranty, logistics, or payment details..." 
+              <textarea
+                className="form-control"
+                rows={3}
+                placeholder="Add warranty, logistics, or payment details..."
                 value={vendorNotes}
                 onChange={(e) => setVendorNotes(e.target.value)}
               ></textarea>
@@ -233,7 +237,7 @@ const VendorRFQs = () => {
                     <td>{new Date(rfq.deadline).toLocaleDateString()}</td>
                     <td>{rfq.attachment_url ? <a href={rfq.attachment_url} target="_blank" rel="noreferrer">Download</a> : 'None'}</td>
                     <td>
-                      <button 
+                      <button
                         className="btn btn-primary flex items-center gap-1"
                         style={{ padding: '0.25rem 0.75rem', fontSize: '0.85rem' }}
                         onClick={() => handleOpenBid(rfq.id)}

@@ -76,7 +76,7 @@ const Register = () => {
         profile_photo: finalProfilePhotoUrl || null
       };
 
-      const response = await fetch('/api/auth/register', {
+      const response = await fetch('http://localhost:5000/api/auth/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -106,7 +106,7 @@ const Register = () => {
         <div className="auth-logo">VendorBridge</div>
         <h2 style={{ textAlign: 'center', marginBottom: '1.5rem' }}>Create an Account</h2>
         {error && <div style={{ color: 'var(--danger)', marginBottom: '1rem', textAlign: 'center' }}>{error}</div>}
-        
+
         <form onSubmit={handleRegister}>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '1.5rem' }}>
             <div style={{ width: '100px', height: '100px', borderRadius: '50%', backgroundColor: 'var(--bg-input)', overflow: 'hidden', marginBottom: '1rem', border: '2px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -163,7 +163,7 @@ const Register = () => {
               </>
             )}
           </div>
-          
+
           <button type="submit" className="btn btn-primary" disabled={loading} style={{ width: '100%', marginTop: '1.5rem', padding: '0.75rem' }}>
             {loading ? 'Registering...' : 'Register'}
           </button>

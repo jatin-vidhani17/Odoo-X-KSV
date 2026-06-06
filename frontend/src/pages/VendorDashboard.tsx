@@ -21,11 +21,11 @@ const VendorDashboard = () => {
         setLoading(true);
         const vendorId = currentUser?.id || 11; // Fallback to 11
 
-        // 1. Fetch RFQs
-        const rfqRes = await apiFetch('/rfqs');
+        // 1. Fetch Assigned RFQs
+        const rfqRes = await apiFetch(`/rfqs/vendor/${vendorId}`);
         let publishedRfqs: any[] = [];
         if (rfqRes.success && Array.isArray(rfqRes.data)) {
-          publishedRfqs = rfqRes.data.filter((r: any) => r.status === 'Published');
+          let publishedRfqs = rfqRes.data.filter((r: any) => r.status === 'Published');
           setRfqs(publishedRfqs);
         }
 

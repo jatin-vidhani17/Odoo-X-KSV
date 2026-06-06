@@ -14,6 +14,7 @@ const ApprovalWorkflow = () => {
   const [remarks, setRemarks] = useState('');
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [pendingList, setPendingList] = useState<any[]>([]);
 
   useEffect(() => {
     // Get logged in user info
@@ -23,7 +24,12 @@ const ApprovalWorkflow = () => {
     }
 
     if (!approvalId) {
-      setLoading(false);
+      // If no ID, load the list of all pending approvals
+      apiFetch('/approvals?action=Pending')
+        .then(res => {
+          if (res.success) setPendingList(res.data);
+        })
+        .finally(() => setLoading(false));
       return;
     }
 
@@ -129,12 +135,51 @@ const ApprovalWorkflow = () => {
 
   if (!approvalId || !approval || !quotation) {
     return (
-      <div className="p-8 text-center text-muted">
-        No active approval workflow selected. 
-        <br /><br />
-        <button className="btn btn-outline" onClick={() => navigate('/procurement/dashboard')}>
-          Go to Dashboard
-        </button>
+      <div>
+        <div style={{ marginBottom: '2rem' }}>
+          <h1>Pending Approvals</h1>
+          <p className="text-muted">Review and action the following pending quotation workflows.</p>
+        </div>
+        <div className="card">
+          {pendingList.length === 0 ? (
+            <div className="p-8 text-center text-muted">No pending approvals at the moment.</div>
+          ) : (
+            <div className="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Approval ID</th>
+                    <th>RFQ Title</th>
+                    <th>Supplier Name</th>
+                    <th>Workflow Status</th>
+                    <th style={{ textAlign: 'right' }}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pendingList.map((app) => (
+                    <tr key={app.id}>
+                      <td className="font-bold">#APP-{app.id}</td>
+                      <td>{app.rfq_title}</td>
+                      <td>{app.vendor_name || `Supplier (User #${app.vendor_id})`}</td>
+                      <td>
+                        <span className="badge badge-warning">{app.action}</span>
+                      </td>
+                      <td style={{ textAlign: 'right' }}>
+                        <button
+                          className="btn btn-primary btn-sm"
+                          style={{ padding: '0.25rem 0.75rem', fontSize: '0.875rem' }}
+                          onClick={() => navigate(`/manager/approvals?approvalId=${app.id}`)}
+                        >
+                          Review & Action
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
       </div>
     );
   }
