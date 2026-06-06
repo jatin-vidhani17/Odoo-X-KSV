@@ -6,6 +6,7 @@ const Vendors = () => {
   const [vendors, setVendors] = useState<any[]>([]);
   const [filteredVendors, setFilteredVendors] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [categories, setCategories] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All Categories');
   const [selectedStatus, setSelectedStatus] = useState('All Status');
@@ -20,7 +21,7 @@ const Vendors = () => {
     phone: '',
     company_name: '',
     gst_number: '',
-    category: 'IT Equipment',
+    category: '',
     address: ''
   });
   const [formError, setFormError] = useState('');
@@ -43,6 +44,14 @@ const Vendors = () => {
 
   useEffect(() => {
     fetchVendors();
+    apiFetch('/categories').then(res => {
+      if (res.success && Array.isArray(res.data)) {
+        setCategories(res.data);
+        if (res.data.length > 0) {
+          setFormData(prev => ({ ...prev, category: res.data[0] }));
+        }
+      }
+    });
   }, []);
 
   // Filter and Search logic
@@ -115,7 +124,7 @@ const Vendors = () => {
         phone: '',
         company_name: '',
         gst_number: '',
-        category: 'IT Equipment',
+        category: categories.length > 0 ? categories[0] : '',
         address: ''
       });
       setShowAddForm(false);
@@ -127,7 +136,7 @@ const Vendors = () => {
     }
   };
 
-  const categories = ['IT Equipment', 'Furniture', 'Stationery'];
+
 
   return (
     <div>

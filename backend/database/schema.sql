@@ -17,8 +17,19 @@ DROP TABLE IF EXISTS rfq_items;
 DROP TABLE IF EXISTS rfqs;
 DROP TABLE IF EXISTS vendor_details;
 DROP TABLE IF EXISTS users;
+DROP TABLE IF EXISTS categories;
 
 SET FOREIGN_KEY_CHECKS = 1;
+
+-- =========================================================================
+-- 0. CATEGORIES
+-- =========================================================================
+
+CREATE TABLE categories (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL UNIQUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 
 -- =========================================================================
 -- 1. USERS
@@ -33,7 +44,7 @@ CREATE TABLE users (
     name VARCHAR(100) NOT NULL,
     email VARCHAR(100) NOT NULL UNIQUE,
     phone VARCHAR(20),
-	profile_url TEXT,
+	profile_photo TEXT,
     role ENUM(
         'Procurement Officer',
         'Vendor',
@@ -79,7 +90,12 @@ CREATE TABLE vendor_details (
 
     FOREIGN KEY (user_id)
         REFERENCES users(id)
-        ON DELETE CASCADE
+        ON DELETE CASCADE,
+
+    FOREIGN KEY (category)
+        REFERENCES categories(name)
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT
 );
 
 -- =========================================================================
@@ -112,6 +128,11 @@ CREATE TABLE rfqs (
 
     FOREIGN KEY (created_by)
         REFERENCES users(id)
+        ON DELETE RESTRICT,
+
+    FOREIGN KEY (category)
+        REFERENCES categories(name)
+        ON UPDATE CASCADE
         ON DELETE RESTRICT
 );
 
@@ -355,3 +376,12 @@ ON users(role);
 
 CREATE INDEX idx_po_status
 ON purchase_orders(status);
+
+-- INSERT DEFAULT CATEGORIES
+INSERT IGNORE INTO categories (name) VALUES 
+('Furniture'), 
+('IT Equipment'), 
+('Stationery'), 
+('Raw Materials'), 
+('Logistics');
+

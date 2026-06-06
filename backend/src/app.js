@@ -19,6 +19,7 @@ const invoiceRoutes = require("./routes/invoices.routes");
 const activityLogRoutes = require("./routes/activity-logs.routes");
 const dashboardRoutes = require("./routes/dashboard.routes");
 const notificationRoutes = require("./routes/notifications.routes");
+const categoriesRoutes = require("./routes/categories.routes");
 
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
@@ -34,6 +35,7 @@ app.use("/api/activity-logs", activityLogRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/analytics", dashboardRoutes);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/categories", categoriesRoutes);
 
 // Global Error Handler to always return JSON
 app.use((err, req, res, next) => {

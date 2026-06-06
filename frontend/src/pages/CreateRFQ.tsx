@@ -10,13 +10,14 @@ const CreateRFQ = () => {
   // Stepper states
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [category, setCategory] = useState('Furniture');
+  const [category, setCategory] = useState('');
   const [deadline, setDeadline] = useState('');
   const [items, setItems] = useState<any[]>([
     { item_name: '', quantity: 1, unit: 'Pcs' }
   ]);
   
   const [allVendors, setAllVendors] = useState<any[]>([]);
+  const [categories, setCategories] = useState<string[]>([]);
   const [selectedVendorIds, setSelectedVendorIds] = useState<number[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -30,6 +31,16 @@ const CreateRFQ = () => {
         }
       })
       .catch(err => console.error("Error loading vendors:", err.message));
+      
+    // Load categories
+    apiFetch('/categories')
+      .then(res => {
+        if (res.success && Array.isArray(res.data)) {
+          setCategories(res.data);
+          if (res.data.length > 0) setCategory(res.data[0]);
+        }
+      })
+      .catch(err => console.error("Error loading categories:", err.message));
   }, []);
 
   const handleAddItem = () => {
@@ -128,7 +139,6 @@ const CreateRFQ = () => {
     }
   };
 
-  const categories = ['IT Equipment', 'Furniture', 'Stationery'];
   const filteredVendors = allVendors.filter(v => v.category === category || selectedVendorIds.includes(v.user_id));
 
   return (
