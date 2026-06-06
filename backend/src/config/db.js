@@ -28,9 +28,24 @@ const pool = mysql.createPool({
     try {
         const connection = await pool.getConnection();
         console.log('✅ Successfully connected to the Aiven MySQL Database Cluster!');
+        
+        // Auto-create notifications table if not exists
+        await connection.query(`
+            CREATE TABLE IF NOT EXISTS notifications (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                user_id INT NOT NULL,
+                title VARCHAR(150) NOT NULL,
+                message TEXT NOT NULL,
+                is_read BOOLEAN DEFAULT FALSE,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+            );
+        `);
+        console.log('✅ Checked/created notifications table successfully!');
+        
         connection.release(); // Return it to the pool immediately
     } catch (error) {
-        console.error('❌ Database connection failed! Check your .env credentials.');
+        console.error('❌ Database connection/setup failed! Check your .env credentials.');
         console.error('Error Details:', error.message);
     }
 })();

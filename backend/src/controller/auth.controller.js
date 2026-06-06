@@ -109,7 +109,82 @@ const register = async (req, res) => {
     }
 };
 
+const forgotPassword = async (req, res) => {
+    try {
+        const { email } = req.body;
+        if (!email) {
+            return res.status(400).json({ message: "Email is required" });
+        }
+        const [users] = await pool.query('SELECT id FROM users WHERE email = ?', [email]);
+        if (users.length === 0) {
+            return res.status(404).json({ message: "User not found with this email" });
+        }
+        // Generate reset token
+        const resetToken = jwt.sign(
+            { email },
+            process.env.JWT_SECRET || 'fallback_secret',
+            { expiresIn: '15m' }
+        );
+        res.status(200).json({ 
+            message: "Password reset link generated", 
+            resetToken 
+        });
+    } catch (error) {
+        console.error("Forgot password error:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+const resetPassword = async (req, res) => {
+    try {
+        const { token, newPassword } = req.body;
+        if (!token || !newPassword) {
+            return res.status(400).json({ message: "Token and new password are required" });
+        }
+
+        let decoded;
+        try {
+            decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret');
+        } catch (err) {
+            return res.status(400).json({ message: "Invalid or expired reset token" });
+        }
+
+        const email = decoded.email;
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        await pool.query('UPDATE users SET password = ? WHERE email = ?', [hashedPassword, email]);
+
+        res.status(200).json({ message: "Password reset successful" });
+    } catch (error) {
+        console.error("Reset password error:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+const logout = async (req, res) => {
+    res.status(200).json({ message: "Logout successful" });
+};
+
+const me = async (req, res) => {
+    try {
+        const [users] = await pool.query(
+            'SELECT id, username, name, email, phone, role, status, profile_photo, created_at, updated_at FROM users WHERE id = ?',
+            [req.user.id]
+        );
+        if (users.length === 0) {
+            return res.status(404).json({ message: "User not found" });
+        }
+        res.status(200).json({ success: true, data: users[0] });
+    } catch (error) {
+        console.error("Auth me error:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+
 module.exports = {
     login,
-    register
+    register,
+    forgotPassword,
+    resetPassword,
+    logout,
+    me
 };
