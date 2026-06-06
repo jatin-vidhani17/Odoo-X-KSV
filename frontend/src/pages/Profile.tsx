@@ -1,16 +1,27 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { User, Mail, Phone, Briefcase, Hash } from 'lucide-react';
+import { apiFetch } from '../utils/api';
 
 const Profile = () => {
   const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
-    // Load from localStorage (this handles both backend auth user object and the frontend-only profile photo)
     const storedUser = localStorage.getItem('user');
-    
     if (storedUser) {
       setUser(JSON.parse(storedUser));
     }
+
+    // Fetch freshest data from backend
+    apiFetch('/auth/me')
+      .then(res => {
+        if (res.success && res.data) {
+          setUser(res.data);
+          localStorage.setItem('user', JSON.stringify(res.data));
+        }
+      })
+      .catch(err => {
+        console.error("Failed to load profile from backend:", err.message);
+      });
   }, []);
 
   if (!user) {
