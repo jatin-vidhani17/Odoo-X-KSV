@@ -17,15 +17,17 @@ const getUserById = async (req, res) => {
         // MySQL Query joining the 'users' details with their 'auth' username
         const query = `
             SELECT 
-                u.id, 
-                a.username, 
-                u.name, 
-                u.phone, 
-                u.email, 
-                u.updated_at 
-            FROM users u
-            JOIN auth a ON u.auth_id = a.id
-            WHERE u.id = ?
+                id, 
+                username, 
+                name, 
+                phone, 
+                email, 
+                role,
+                status,
+                created_at,
+                updated_at 
+            FROM users
+            WHERE id = ?
         `;
 
         // Executing the query safely using placeholders (?) to prevent SQL injection

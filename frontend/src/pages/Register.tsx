@@ -1,56 +1,105 @@
-
+import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 
 const Register = () => {
   const navigate = useNavigate();
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    password: '',
+    role: 'Procurement Officer',
+    company_name: '',
+    gst_number: ''
+  });
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleRegister = (e: React.FormEvent) => {
-    e.preventDefault();
-    navigate('/login');
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+
+    try {
+      const response = await fetch('http://localhost:5000/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Registration failed');
+      }
+
+      navigate('/login');
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const isVendor = formData.role === 'Vendor';
+
   return (
-    <div className="auth-container">
-      <div className="auth-card" style={{ maxWidth: '600px' }}>
+    <div className="auth-container" style={{ padding: '2rem 0', height: 'auto', minHeight: '100vh' }}>
+      <div className="auth-card" style={{ maxWidth: '600px', margin: 'auto' }}>
         <div className="auth-logo">VendorBridge</div>
+        <h2 style={{ textAlign: 'center', marginBottom: '1.5rem' }}>Create an Account</h2>
+        {error && <div style={{ color: 'var(--danger)', marginBottom: '1rem', textAlign: 'center' }}>{error}</div>}
+        
         <form onSubmit={handleRegister}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
             <div className="form-group">
-              <label className="form-label">First Name</label>
-              <input type="text" required className="form-control" placeholder="First Name" />
+              <label className="form-label">Full Name *</label>
+              <input type="text" name="name" required className="form-control" placeholder="John Doe" value={formData.name} onChange={handleChange} />
             </div>
             <div className="form-group">
-              <label className="form-label">Last Name</label>
-              <input type="text" required className="form-control" placeholder="Last Name" />
+              <label className="form-label">Email Address *</label>
+              <input type="email" name="email" required className="form-control" placeholder="john@example.com" value={formData.email} onChange={handleChange} />
             </div>
             <div className="form-group">
-              <label className="form-label">Email Address</label>
-              <input type="email" required className="form-control" placeholder="Email Address" />
+              <label className="form-label">Password *</label>
+              <input type="password" name="password" required className="form-control" placeholder="••••••••" value={formData.password} onChange={handleChange} />
             </div>
             <div className="form-group">
               <label className="form-label">Phone Number</label>
-              <input type="tel" className="form-control" placeholder="Phone Number" />
+              <input type="tel" name="phone" className="form-control" placeholder="+1 234 567 890" value={formData.phone} onChange={handleChange} />
             </div>
-            <div className="form-group">
-              <label className="form-label">Job Title / Dept</label>
-              <input type="text" className="form-control" placeholder="Job Title / Dept" />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Country</label>
-              <select className="form-control">
-                <option>Select Country</option>
-                <option>United States</option>
-                <option>India</option>
-                <option>United Kingdom</option>
+            <div className="form-group" style={{ gridColumn: 'span 2' }}>
+              <label className="form-label">Account Role *</label>
+              <select name="role" className="form-control" value={formData.role} onChange={handleChange}>
+                <option value="Procurement Officer">Procurement Officer</option>
+                <option value="Manager">Manager</option>
+                <option value="Vendor">Vendor</option>
               </select>
             </div>
+
+            {isVendor && (
+              <>
+                <div className="form-group" style={{ gridColumn: 'span 2' }}>
+                  <h3 style={{ margin: '1rem 0 0.5rem', fontSize: '1rem', color: 'var(--accent)' }}>Vendor Details</h3>
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Company Name *</label>
+                  <input type="text" name="company_name" required={isVendor} className="form-control" placeholder="Company Ltd." value={formData.company_name} onChange={handleChange} />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">GST Number *</label>
+                  <input type="text" name="gst_number" required={isVendor} className="form-control" placeholder="GSTIN..." value={formData.gst_number} onChange={handleChange} />
+                </div>
+              </>
+            )}
           </div>
-          <div className="form-group" style={{ marginTop: '1rem' }}>
-            <label className="form-label">Additional Information</label>
-            <textarea className="form-control" rows={4} placeholder="Additional Information..."></textarea>
-          </div>
-          <button type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: '1rem', padding: '0.75rem' }}>
-            Register
+          
+          <button type="submit" className="btn btn-primary" disabled={loading} style={{ width: '100%', marginTop: '1.5rem', padding: '0.75rem' }}>
+            {loading ? 'Registering...' : 'Register'}
           </button>
         </form>
         <div style={{ marginTop: '1.5rem', textAlign: 'center' }}>
