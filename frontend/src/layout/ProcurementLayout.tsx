@@ -35,7 +35,7 @@ const ProcurementLayout = () => {
             <Users size={20} />
             <span>Vendors</span>
           </NavLink>
-          <NavLink to="/procurement/rfqs/create" className={({isActive}) => `nav-item ${isActive ? 'active' : ''}`}>
+          <NavLink to="/procurement/rfqs" className={({isActive}) => `nav-item ${isActive ? 'active' : ''}`}>
             <FileText size={20} />
             <span>RFQs</span>
           </NavLink>

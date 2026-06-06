@@ -204,9 +204,50 @@ const getApprovalById = async (req, res) => {
     }
 };
 
+// 5. Get all Approvals (with filters)
+const listApprovals = async (req, res) => {
+    try {
+        const { action, approver_id } = req.query;
+        let query = `
+            SELECT aw.*, q.rfq_id, q.vendor_id, u.name AS approver_name,
+                   r.title AS rfq_title, vd.company_name AS vendor_name
+            FROM approval_workflows aw
+            INNER JOIN users u ON aw.approver_id = u.id
+            INNER JOIN quotations q ON aw.quotation_id = q.id
+            INNER JOIN rfqs r ON q.rfq_id = r.id
+            LEFT JOIN vendor_details vd ON q.vendor_id = vd.user_id
+        `;
+        const params = [];
+        const conditions = [];
+
+        if (action) {
+            conditions.push("aw.action = ?");
+            params.push(action);
+        }
+        if (approver_id) {
+            conditions.push("aw.approver_id = ?");
+            params.push(parseInt(approver_id, 10));
+        }
+
+        if (conditions.length > 0) {
+            query += " WHERE " + conditions.join(" AND ");
+        }
+
+        query += " ORDER BY aw.id DESC";
+
+        const [rows] = await db.query(query, params);
+        return res.status(200).json({ success: true, data: rows });
+    } catch (error) {
+        console.error("Error in listApprovals:", error);
+        return res.status(500).json({ success: false, message: "Internal server error" });
+    }
+};
+
 module.exports = {
     createApproval,
     approveQuotation,
     rejectQuotation,
-    getApprovalById
+    getApprovalById,
+    listApprovals
 };
+

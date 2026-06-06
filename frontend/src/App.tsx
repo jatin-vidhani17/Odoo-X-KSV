@@ -13,6 +13,7 @@ import Register from './pages/Register';
 // Procurement Pages
 import Dashboard from './pages/Dashboard';
 import Vendors from './pages/Vendors';
+import RFQsList from './pages/RFQsList';
 import CreateRFQ from './pages/CreateRFQ';
 import SelectQuotations from './pages/SelectQuotations';
 import QuotationComparison from './pages/QuotationComparison';
@@ -29,6 +30,8 @@ import AdminVendorsReview from './pages/AdminVendorsReview';
 
 // Vendor Pages
 import VendorDashboard from './pages/VendorDashboard';
+import VendorRFQs from './pages/VendorRFQs';
+import VendorQuotations from './pages/VendorQuotations';
 
 // Manager Pages
 import ManagerDashboard from './pages/ManagerDashboard';
@@ -50,6 +53,7 @@ function App() {
           <Route index element={<Navigate to="/procurement/dashboard" replace />} />
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="vendors" element={<Vendors />} />
+          <Route path="rfqs" element={<RFQsList />} />
           <Route path="rfqs/create" element={<CreateRFQ />} />
           <Route path="quotations/select" element={<SelectQuotations />} />
           <Route path="quotations/compare" element={<QuotationComparison />} />
@@ -73,9 +77,8 @@ function App() {
         <Route path="/vendor" element={<VendorLayout />}>
           <Route index element={<Navigate to="/vendor/dashboard" replace />} />
           <Route path="dashboard" element={<VendorDashboard />} />
-          {/* Reusing some components for visual placeholder or you can create specific ones later */}
-          <Route path="rfqs" element={<div style={{ padding: '2rem' }}><h2>Vendor RFQs</h2><p className="text-muted">List of RFQs assigned to this vendor.</p></div>} />
-          <Route path="quotations" element={<div style={{ padding: '2rem' }}><h2>My Quotations</h2><p className="text-muted">Manage submitted quotations.</p></div>} />
+          <Route path="rfqs" element={<VendorRFQs />} />
+          <Route path="quotations" element={<VendorQuotations />} />
           <Route path="purchase-orders" element={<PurchaseOrder />} />
           <Route path="profile" element={<Profile />} />
         </Route>
