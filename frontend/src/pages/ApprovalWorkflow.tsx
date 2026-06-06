@@ -70,40 +70,15 @@ const ApprovalWorkflow = () => {
       });
 
       if (res.success) {
-        // If approved, automatically create a Purchase Order
         if (action === 'approve') {
-          // Calculate total amount from quotation items
-          const totalAmount = quotation.items?.reduce(
-            (sum: number, it: any) => sum + parseFloat(it.net_price_with_gst || 0), 0
-          ) || 0;
-
-          // Create PO: POST /api/purchase-orders
-          const poRes = await apiFetch('/purchase-orders', {
+          // Log activity
+          await apiFetch('/activity-logs', {
             method: 'POST',
             body: JSON.stringify({
-              quotation_id: quotation.id,
-              total_amount: totalAmount
+              activity_type: 'Purchase Order Generation',
+              log_summary: `Created Purchase Order for vendor ${quotation.company_name}`
             })
-          });
-
-          if (poRes.success && poRes.data) {
-            // Also generate an invoice in Unpaid state for the PO: POST /api/invoices
-            await apiFetch('/invoices', {
-              method: 'POST',
-              body: JSON.stringify({
-                po_id: poRes.data.po_id
-              })
-            }).catch(() => {});
-
-            // Log activity
-            await apiFetch('/activity-logs', {
-              method: 'POST',
-              body: JSON.stringify({
-                activity_type: 'Purchase Order Generation',
-                log_summary: `Created Purchase Order ${poRes.data.po_number} for vendor ${quotation.company_name}`
-              })
-            }).catch(() => {});
-          }
+          }).catch(() => {});
         }
 
         // Log Approval/Rejection activity

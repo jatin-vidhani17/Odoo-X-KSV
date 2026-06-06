@@ -73,15 +73,11 @@ const PurchaseOrder = () => {
   };
 
   const handleEmail = async () => {
-    if (!invoice) {
-      alert("No matching invoice generated yet to email.");
-      return;
-    }
-
+    if (!selectedPoId) return;
     setSendingEmail(true);
     try {
-      // Hit email invoice: POST /api/invoices/:id/email
-      const res = await apiFetch(`/invoices/${invoice.id}/email`, {
+      // Hit email PO: POST /api/purchase-orders/:id/email
+      const res = await apiFetch(`/purchase-orders/${selectedPoId}/email`, {
         method: 'POST',
         body: JSON.stringify({
           email_address: poDetails?.vendor_email
@@ -139,8 +135,8 @@ const PurchaseOrder = () => {
         {poDetails && (
           <div style={{ display: 'flex', gap: '0.5rem' }}>
             <button className="btn btn-outline" onClick={handlePrint}><Printer size={18} /> Print</button>
-            <button className="btn btn-outline" disabled={sendingEmail || !invoice} onClick={handleEmail}>
-              <Mail size={18} /> {sendingEmail ? "Sending..." : "Email Invoice"}
+            <button className="btn btn-outline" disabled={sendingEmail} onClick={handleEmail}>
+              <Mail size={18} /> {sendingEmail ? "Sending..." : "Email PO"}
             </button>
           </div>
         )}
@@ -259,18 +255,52 @@ const PurchaseOrder = () => {
             </div>
           </div>
 
-          {invoice && (
+          {invoice ? (
             <div className="mt-4 pt-4" style={{ borderTop: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'var(--bg-input)', padding: '1rem', borderRadius: '4px' }}>
               <div>
                 <strong>Associated Invoice: {invoice.invoice_number}</strong>
                 <div className="text-sm text-muted">Status: {invoice.status} | Tax: ${parseFloat(invoice.tax_amount).toFixed(2)}</div>
               </div>
               {invoice.status === 'Unpaid' ? (
-                <button className="btn btn-primary" onClick={handlePayInvoice}>
-                  Pay Invoice
-                </button>
+                JSON.parse(localStorage.getItem('user') || '{}').role === 'Procurement Officer' ? (
+                  <button className="btn btn-primary" onClick={handlePayInvoice}>
+                    Pay Invoice
+                  </button>
+                ) : (
+                  <span className="badge badge-warning">Unpaid</span>
+                )
               ) : (
                 <span className="badge badge-success">Slipped & Settled</span>
+              )}
+            </div>
+          ) : (
+            <div className="mt-4 pt-4" style={{ borderTop: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'var(--bg-input)', padding: '1rem', borderRadius: '4px' }}>
+              <div>
+                <strong>No Invoice Generated Yet</strong>
+                <div className="text-sm text-muted">Generate an invoice to request payment for this Purchase Order.</div>
+              </div>
+              {JSON.parse(localStorage.getItem('user') || '{}').role === 'Vendor' && (
+                <button className="btn btn-primary" onClick={async () => {
+                  try {
+                    const res = await apiFetch('/invoices', {
+                      method: 'POST',
+                      body: JSON.stringify({ po_id: selectedPoId })
+                    });
+                    if (res.success) {
+                      alert("Invoice generated successfully!");
+                      // Refresh invoice list
+                      const invRes = await apiFetch('/invoices');
+                      if (invRes.success && Array.isArray(invRes.data)) {
+                        const matchingInvoice = invRes.data.find((inv: any) => inv.po_id === selectedPoId);
+                        if (matchingInvoice) setInvoice(matchingInvoice);
+                      }
+                    }
+                  } catch (err: any) {
+                    alert(`Failed to generate invoice: ${err.message}`);
+                  }
+                }}>
+                  Generate Invoice
+                </button>
               )}
             </div>
           )}

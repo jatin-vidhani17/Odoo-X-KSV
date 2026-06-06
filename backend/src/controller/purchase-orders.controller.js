@@ -182,7 +182,7 @@ const getPOPDF = async (req, res) => {
         `).join("");
 
         const pdfHtml = `
-            <div style="font-family: Arial, sans-serif; padding: 40px; color: #333; max-width: 800px; margin: auto; border: 1px solid #eee;">
+            <div style="font-family: Arial, sans-serif; padding: 40px; color: #333; background-color: white; max-width: 800px; margin: auto; border: 1px solid #eee;">
                 <div style="display: flex; justify-content: space-between; border-bottom: 2px solid #333; padding-bottom: 20px;">
                     <div>
                         <h1 style="margin: 0; color: #1e3a8a;">VendorBridge ERP</h1>
@@ -248,10 +248,53 @@ const getPOPDF = async (req, res) => {
     }
 };
 
+// 6. Send PO Email (Mock)
+const emailPO = async (req, res) => {
+    try {
+        const id = parseInt(req.params.id, 10);
+        const { email_address } = req.body;
+
+        if (isNaN(id)) {
+            return res.status(400).json({ success: false, message: "Invalid PO ID format" });
+        }
+
+        const [rows] = await db.query(
+            `SELECT po.po_number, u.email AS vendor_email
+             FROM purchase_orders po
+             INNER JOIN quotations q ON po.quotation_id = q.id
+             INNER JOIN users u ON q.vendor_id = u.id
+             WHERE po.id = ?`,
+            [id]
+        );
+
+        if (rows.length === 0) {
+            return res.status(404).json({ success: false, message: "Purchase Order not found" });
+        }
+
+        const po = rows[0];
+        const targetEmail = email_address || po.vendor_email || "procurement@vendorbridge.com";
+
+        // Create log entry for activity
+        await db.query(
+            "INSERT INTO activity_logs (activity_type, log_summary) VALUES ('PO Dispatch', ?)",
+            [`Dispatched Purchase Order ${po.po_number} via email to ${targetEmail}`]
+        );
+
+        return res.status(200).json({
+            success: true,
+            message: `Purchase Order ${po.po_number} successfully emailed to ${targetEmail} (Simulated)`
+        });
+    } catch (error) {
+        console.error("Error in emailPO:", error);
+        return res.status(500).json({ success: false, message: "Internal server error" });
+    }
+};
+
 module.exports = {
     createPurchaseOrder,
     getAllPurchaseOrders,
     getPurchaseOrderById,
     updatePOStatus,
-    getPOPDF
+    getPOPDF,
+    emailPO
 };

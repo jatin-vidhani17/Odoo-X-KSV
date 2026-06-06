@@ -51,6 +51,10 @@ const ProcurementLayout = () => {
             <ShoppingCart size={20} />
             <span>Purchase Orders</span>
           </NavLink>
+          <NavLink to="/procurement/invoices" className={({isActive}) => `nav-item ${isActive ? 'active' : ''}`}>
+            <FileText size={20} />
+            <span>Invoices</span>
+          </NavLink>
           <NavLink to="/procurement/reports" className={({isActive}) => `nav-item ${isActive ? 'active' : ''}`}>
             <BarChart2 size={20} />
             <span>Reports</span>

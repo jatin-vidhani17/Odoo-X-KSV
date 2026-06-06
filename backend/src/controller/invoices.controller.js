@@ -229,7 +229,7 @@ const getInvoicePDF = async (req, res) => {
         `).join("");
 
         const pdfHtml = `
-            <div style="font-family: Arial, sans-serif; padding: 40px; color: #333; max-width: 800px; margin: auto; border: 1px solid #eee;">
+            <div style="font-family: Arial, sans-serif; padding: 40px; color: #333; background-color: white; max-width: 800px; margin: auto; border: 1px solid #eee;">
                 <div style="display: flex; justify-content: space-between; border-bottom: 2px solid #10b981; padding-bottom: 20px;">
                     <div>
                         <h1 style="margin: 0; color: #10b981;">VendorBridge ERP</h1>

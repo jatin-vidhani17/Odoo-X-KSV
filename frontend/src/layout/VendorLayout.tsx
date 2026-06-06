@@ -40,6 +40,10 @@ const VendorLayout = () => {
             <ShoppingCart size={20} />
             <span>Purchase Orders</span>
           </NavLink>
+          <NavLink to="/vendor/invoices" className={({isActive}) => `nav-item ${isActive ? 'active' : ''}`}>
+            <FileText size={20} />
+            <span>Invoices</span>
+          </NavLink>
         </nav>
       </aside>
 

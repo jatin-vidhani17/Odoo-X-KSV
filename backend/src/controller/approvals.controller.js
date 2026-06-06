@@ -102,6 +102,23 @@ const approveQuotation = async (req, res) => {
                 [rfqId]
             );
 
+            // 5. Generate Purchase Order automatically
+            const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+            const po_number = `PO-${dateStr}-${Math.floor(1000 + Math.random() * 9000)}`;
+
+            const [sumResult] = await connection.query(
+                "SELECT SUM(net_price_with_gst) AS total, SUM(total_price_without_tax) AS subtotal FROM quotation_items WHERE quotation_id = ?",
+                [quotationId]
+            );
+            const total_amount = sumResult[0].total || 0.00;
+            const subtotal_amount = sumResult[0].subtotal || 0.00;
+            const tax_amount = total_amount - subtotal_amount;
+
+            const [poResult] = await connection.query(
+                "INSERT INTO purchase_orders (po_number, quotation_id, total_amount, status) VALUES (?, ?, ?, 'Issued')",
+                [po_number, quotationId, total_amount]
+            );
+
             await connection.commit();
             return res.status(200).json({ success: true, message: "Quotation approved and finalized successfully" });
 

@@ -19,6 +19,7 @@ import SelectQuotations from './pages/SelectQuotations';
 import QuotationComparison from './pages/QuotationComparison';
 import ApprovalWorkflow from './pages/ApprovalWorkflow';
 import PurchaseOrder from './pages/PurchaseOrder';
+import Invoices from './pages/Invoices';
 import ActivityLogs from './pages/ActivityLogs';
 import Reports from './pages/Reports';
 import Profile from './pages/Profile';
@@ -59,6 +60,7 @@ function App() {
           <Route path="quotations/compare" element={<QuotationComparison />} />
           <Route path="approvals" element={<ApprovalWorkflow />} />
           <Route path="purchase-orders" element={<PurchaseOrder />} />
+          <Route path="invoices" element={<Invoices />} />
           <Route path="activity" element={<ActivityLogs />} />
           <Route path="reports" element={<Reports />} />
           <Route path="profile" element={<Profile />} />
@@ -80,6 +82,7 @@ function App() {
           <Route path="rfqs" element={<VendorRFQs />} />
           <Route path="quotations" element={<VendorQuotations />} />
           <Route path="purchase-orders" element={<PurchaseOrder />} />
+          <Route path="invoices" element={<Invoices />} />
           <Route path="profile" element={<Profile />} />
         </Route>
 
